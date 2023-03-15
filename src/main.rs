@@ -1,12 +1,11 @@
-use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse},
-    routing::get,
-    Json, Router,
-};
+use axum::{http::StatusCode, response::{Html, IntoResponse}, routing::get, Json, Router};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tracing::info;
+
+pub mod api{
+    pub mod handlers;
+}
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +13,8 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(handler))
-        .route("/json", get(handler_json));
+        .route("/json", get(handler_json))
+        .nest("/hello", api::handlers::hello_handler::routes());
     let app = app.fallback(handler_404);
 
     // run it
@@ -29,6 +29,7 @@ async fn main() {
 #[derive(Serialize, Deserialize)]
 struct Message {
     message: String,
+    status: String,
 }
 
 // Handler for route "/"
@@ -37,13 +38,16 @@ async fn handler() -> Html<&'static str> {
     Html("Hello, World!")
 }
 
+// Page not found fallback handlers
 async fn handler_404() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Nothing to see here.")
 }
 
+// JSON handlers
 async fn handler_json() -> impl IntoResponse {
     info!("Handle Json payload");
     Json(Message {
         message: "Hello".to_string(),
+        status: "Success".to_string(),
     })
 }
