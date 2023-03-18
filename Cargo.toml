@@ -1,14 +1,21 @@
 [package]
 name = "axum-api"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# core axum library
 axum = "0"
+
+# JSON parser
 serde = { version = "1.0", features = ["derive"]}
 serde_json = "1.0"
+
+# Async
 tokio = { version = "1.0", features = ["full"] }
+
+# Logging / Tracing.
 tracing = "0"
-tracing-subscriber = "0"
+tracing-subscriber = { version = "0", features = ["env-filter"]}
