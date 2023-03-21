@@ -8,8 +8,8 @@ use axum::{
 use axum::extract::State;
 use chrono::{SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{Error, MySqlPool};
 use sqlx::mysql::MySqlPoolOptions;
+use sqlx::{Error, MySqlPool};
 use tracing::{error, info};
 
 pub mod api {
@@ -28,6 +28,7 @@ async fn main() {
   // Setup connection pool.
   let pool = MySqlPoolOptions::new()
     .max_connections(10)
+    .min_connections(2)
     .connect(&db_connection_str)
     .await
     .map_err(|e| {
@@ -39,9 +40,9 @@ async fn main() {
   let app = Router::new()
     .route("/", get(handler))
     .route("/json", get(handler_json))
-    .with_state(pool)
     .nest("/hello", api::handlers::hello_handler::routes())
-    .nest("/users", api::handlers::users_handler::routes());
+    .nest("/users", api::handlers::users_handler::routes())
+    .with_state(pool);
 
   let app = app.fallback(handler_404);
 

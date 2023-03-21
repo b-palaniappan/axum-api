@@ -1,11 +1,13 @@
 use axum::{Json, Router};
+use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::routing::get;
+use sqlx::MySqlPool;
 use tracing::info;
 
 use crate::api::model::users;
 
-async fn create_user() -> impl IntoResponse {
+async fn create_user(State(pool): State<MySqlPool>) -> impl IntoResponse {
   info!("Create a new user");
   Json(users::CreateUser {
     first_name: "John".to_owned(),
@@ -20,8 +22,7 @@ async fn create_user() -> impl IntoResponse {
 }
 
 // Router function for hello handler
-pub fn routes() -> Router {
+pub fn routes() -> Router<MySqlPool> {
   Router::new()
     .route("/", get(create_user))
 }
-

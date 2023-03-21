@@ -2,28 +2,42 @@
 name = "axum-api"
 version = "0.2.0"
 edition = "2021"
-authors = ["Balasubramanian Palaniappan <bala@c12.io>"]
+authors = ["Bala", "bala@c12.io"]
+description = "Axum Web API application with SQLX MySQL backend persistance"
+readme = "README.md"
+license = "MIT"
+keywords = ["API", "axum", "mysql"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# to Reduce the size of release binary.
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size.
+lto = true
+codegen-units = 1
+panic = "abort"
+
 [dependencies]
 # core axum library
-axum = "0"
-chrono = "0.4.24"
+axum = "^0"
 
 # JSON parser
-serde = { version = "1.0", features = ["derive"]}
-serde_json = "1.0"
+serde = { version = "^1.0", features = ["derive"] }
+serde_json = "^1.0"
 
 # SQL with MySQL.
-sqlx = { version = "0", features = ["runtime-tokio-rustls", "mysql"]}
+sqlx = { version = "^0", features = ["mysql", "runtime-tokio-rustls", "chrono"]}
 
 # Async
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "^1.0", features = ["full"] }
 
 # Logging / Tracing.
-tracing = "0"
-tracing-subscriber = { version = "0", features = ["env-filter"]}
+tracing = "^0"
+tracing-subscriber = { version = "^0", features = ["env-filter"] }
 
 # Form Validation
-validator = { version = "0", features = ["derive"]}
+validator = { version = "^0", features = ["derive"] }
+
+# Utils
+chrono = "^0"
