@@ -1,3 +1,4 @@
+use std::env;
 use std::net::SocketAddr;
 
 use axum::{
@@ -7,14 +8,23 @@ use axum::{
 };
 use axum::extract::State;
 use chrono::{SecondsFormat, Utc};
+use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
-use sqlx::mysql::MySqlPoolOptions;
 use sqlx::{Error, MySqlPool};
+use sqlx::mysql::MySqlPoolOptions;
 use tracing::{error, info};
+
+use crate::api::model::api_error::ApiErrorResponse;
 
 pub mod api {
   pub mod handlers;
   pub mod model;
+}
+
+pub mod service;
+pub mod db {
+  pub mod entity;
+  pub mod repository;
 }
 
 #[tokio::main]
@@ -22,13 +32,19 @@ async fn main() {
   // Logging handler using tracing.
   tracing_subscriber::fmt().init();
 
-  // Get Database connection string from ENV variable.
-  let db_connection_str = std::env::var("DATABASE.URL").unwrap_or_else(|_| "mysql://localhost".to_string());
+  // load dotenv.
+  dotenv().ok();
+
+  // Get Database connection string and other properties from ENV variable.
+  let db_connection_str = env::var("DATABASE.URL").expect("Error getting DB connection string");
+  let server_host = env::var("SERVER.HOST").expect("Error getting server host");
+  let server_port = env::var("SERVER.PORT").expect("Error getting server port");
+  let server_addr = server_host + ":" + &*server_port;
 
   // Setup connection pool.
   let pool = MySqlPoolOptions::new()
     .max_connections(10)
-    .min_connections(2)
+    .min_connections(1)
     .connect(&db_connection_str)
     .await
     .map_err(|e| {
@@ -47,9 +63,9 @@ async fn main() {
   let app = app.fallback(handler_404);
 
   // run it
-  let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
-  info!("Starting server at {}", addr);
-  if let Err(e) = axum::Server::bind(&addr).serve(app.into_make_service()).await {
+  let server_address: SocketAddr = server_addr.parse().unwrap();
+  info!("Starting server at {}", server_addr);
+  if let Err(e) = axum::Server::bind(&server_address).serve(app.into_make_service()).await {
     error!("Server error: {}", e);
   }
 }
@@ -86,19 +102,11 @@ async fn handler_json(State(pool): State<MySqlPool>) -> impl IntoResponse {
 
 // Page not found fallback handlers
 async fn handler_404() -> impl IntoResponse {
-  Json(ApiError {
+  Json(ApiErrorResponse {
     status: 404,
     message: "Endpoint not found".to_owned(),
     time: Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true),
     debug_message: Some("Endpoint you are requesting is not found".to_owned()),
+    sub_errors: vec![],
   })
-}
-
-// Model for error handling.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ApiError {
-  pub status: u16,
-  pub time: String,
-  pub message: String,
-  pub debug_message: Option<String>,
 }

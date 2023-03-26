@@ -1,28 +1,47 @@
 use axum::{Json, Router};
 use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::post;
 use sqlx::MySqlPool;
-use tracing::info;
+use tracing::{error, info};
+use validator::Validate;
 
-use crate::api::model::users;
+use crate::api::model::api_error::{ApiErrorResponse};
+use crate::api::model::users::{CreateUser, StoredUser};
+use crate::service::event_service;
 
-async fn create_user(State(pool): State<MySqlPool>) -> impl IntoResponse {
-  info!("Create a new user");
-  Json(users::CreateUser {
-    first_name: "John".to_owned(),
-    last_name: "Doe".to_owned(),
-    email: "john@c12.io".to_string(),
-    address_line_one: "1100 Locust St".to_string(),
-    address_line_tow: None,
-    city: "Des Moines".to_string(),
-    state: "IA".to_string(),
-    country: "US".to_string(),
-  })
+async fn create_user(State(pool): State<MySqlPool>, Json(user): Json<CreateUser>) -> impl IntoResponse {
+  info!("Create a new User");
+  event_service::app_event(State(pool)).await;
+  match user.validate() {
+    Ok(_) => {
+      Ok(Json(StoredUser {
+        id: "".to_string(),
+        first_name: "".to_string(),
+        last_name: "".to_string(),
+        email: "".to_string(),
+        address_line_one: "".to_string(),
+        address_line_tow: None,
+        city: "".to_string(),
+        state: "".to_string(),
+        country: "".to_string(),
+      }))
+    },
+    Err(err) => {
+      error!("Error - {}", err);
+      Err(Json(ApiErrorResponse {
+        status: 0,
+        time: "".to_string(),
+        message: "".to_string(),
+        debug_message: None,
+        sub_errors: vec![],
+      }))
+    },
+  }
 }
 
 // Router function for hello handler
 pub fn routes() -> Router<MySqlPool> {
   Router::new()
-    .route("/", get(create_user))
+    .route("/", post(create_user))
 }

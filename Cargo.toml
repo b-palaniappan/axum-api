@@ -41,3 +41,4 @@ validator = { version = "^0", features = ["derive"] }
 
 # Utils
 chrono = "^0"
+dotenvy = "^0"
