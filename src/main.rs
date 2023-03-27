@@ -52,6 +52,13 @@ async fn main() {
       panic!("Failed to create database connection pool: {}", e);
     }).unwrap();
 
+  // Trigger migration scripts for MySQL using SQLX
+  let response = sqlx::migrate!("./migrations").run(&pool).await;
+  match response {
+    Ok(_) => info!("Migration completed successfully"),
+    Err(e) => error!("Error in DB Migration: {}", e),
+  }
+
   // build our application with a route
   let app = Router::new()
     .route("/", get(handler))
