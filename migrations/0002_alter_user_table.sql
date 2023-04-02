@@ -1,4 +1,2 @@
-alter table `axum`.`users`
-  add index users_deleted_at_idx (`deleted_at`);
-alter table `axum`.`users`
-  add index users_email_idx (`email`);
+create index users_deleted_at_idx on `axum`.`users` (`deleted_at`);
+create index users_email_idx on `axum`.`users` (`email`);

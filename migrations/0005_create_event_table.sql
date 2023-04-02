@@ -7,4 +7,3 @@ create table `axum`.`event`
   `time`    datetime(6)                    not null default current_timestamp(6),
   `user_id` bigint
 );
-
