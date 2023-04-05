@@ -1,4 +1,3 @@
-
 create table if not exists `axum`.`address`
 (
   `id`         bigint       not null auto_increment primary key,

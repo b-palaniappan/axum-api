@@ -1,4 +1,4 @@
-create table `axum`.`event`
+create table `axum`.`events`
 (
   `id`      bigint                         not null auto_increment primary key,
   `type`    enum ('User', 'Auth', 'Other') not null,
