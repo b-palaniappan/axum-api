@@ -22,6 +22,7 @@ pub mod api {
 }
 
 pub mod service;
+
 pub mod db {
   pub mod entity;
   pub mod repository;
@@ -36,9 +37,9 @@ async fn main() {
   dotenv().ok();
 
   // Get Database connection string and other properties from ENV variable.
-  let db_connection_str = env::var("DATABASE.URL").expect("Error getting DB connection string");
-  let server_host = env::var("SERVER.HOST").expect("Error getting server host");
-  let server_port = env::var("SERVER.PORT").expect("Error getting server port");
+  let db_connection_str = env::var("DATABASE_URL").expect("Error getting DB connection string");
+  let server_host = env::var("SERVER_HOST").expect("Error getting server host");
+  let server_port = env::var("SERVER_PORT").expect("Error getting server port");
   let server_addr = server_host + ":" + &*server_port;
 
   // Setup connection pool.

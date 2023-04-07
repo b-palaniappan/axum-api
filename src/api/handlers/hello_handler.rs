@@ -9,13 +9,13 @@ use crate::service::event_service;
 
 // JSON handler
 async fn handler_json(State(pool): State<MySqlPool>) -> impl IntoResponse {
-    info!("From Json Handler inside handlers package");
-    event_service::app_event(State(pool)).await;
-    Json("Hello World in json")
+  info!("From Json Handler inside handlers package");
+  event_service::add_event(State(pool)).await;
+  Json("Hello World in json")
 }
 
 // Router function for hello handler
 pub fn routes() -> Router<MySqlPool> {
-    Router::new()
-        .route("/", get(handler_json))
+  Router::new()
+    .route("/", get(handler_json))
 }

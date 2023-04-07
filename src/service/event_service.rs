@@ -1,6 +1,9 @@
 use axum::extract::State;
 use sqlx::MySqlPool;
 
-pub async fn app_event(State(pool): State<MySqlPool>) {
-  sqlx::query("insert into events (type, name, user_key) values ('AUTH', 'APP_STARTED', 'random_user')").execute(&pool).await.expect("TODO: panic message");
+pub async fn add_event(State(pool): State<MySqlPool>) {
+  sqlx::query("insert into event (type, name, user_id) values ('Auth', 'APP_STARTED', 78)")
+    .execute(&pool)
+    .await
+    .expect("panic message");
 }
