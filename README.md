@@ -5,7 +5,7 @@ Rust Axum REST api application
 - [x] Create REST API with Axum.
 - [ ] Basic CRUD calls using SQLX with MySQL DB.
 - [x] Logging.
-- [ ] JSON request payload validation.
+- [x] JSON request payload validation.
 - [ ] Add JWT security.
 - [ ] Add roll based JWT.
 - [ ] Global and local api error handling.
