@@ -1,7 +1,7 @@
 use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
-use axum::routing::{get, post, put};
+use axum::routing::{get, post};
 use sqlx::MySqlPool;
 use tracing::{error, info};
 use validator::Validate;

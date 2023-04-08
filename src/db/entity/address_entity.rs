@@ -1,5 +1,7 @@
 use chrono::{DateTime, Utc};
+use sqlx::FromRow;
 
+#[derive(Debug, FromRow)]
 pub struct Address {
   pub id: i64,
   pub user_id: i64,
