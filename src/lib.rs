@@ -53,11 +53,11 @@ pub async fn run() {
         .unwrap();
 
     // Trigger migration scripts for MySQL using SQLX
-    let response = sqlx::migrate!("./migrations").run(&pool).await;
-    match response {
-        Ok(_) => info!("Migration completed successfully"),
-        Err(e) => error!("Error in DB Migration: {}", e),
-    }
+    // let response = sqlx::migrate!("./migrations").run(&pool).await;
+    // match response {
+    //     Ok(_) => info!("Migration completed successfully"),
+    //     Err(e) => error!("Error in DB Migration: {}", e),
+    // }
 
     // CORS Middleware
     let cors = CorsLayer::new()
