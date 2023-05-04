@@ -88,4 +88,5 @@ pub async fn delete_user(State(pool): State<MySqlPool>, id: i64) -> bool {
 
 pub async fn patch_user(State(pool): State<MySqlPool>, id: i64, patch_user: &PatchUser) {
     // todo: work in progress!!!
+    todo!()
 }

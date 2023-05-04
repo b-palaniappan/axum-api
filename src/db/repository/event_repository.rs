@@ -2,6 +2,7 @@ use crate::db::entity::event_entity::Event;
 use axum::extract::State;
 use chrono::Utc;
 use sqlx::{query, MySqlPool};
+use tracing::{error, info};
 
 // Create a new event.
 pub async fn create_event(
@@ -18,4 +19,8 @@ pub async fn create_event(
         .bind(user_id)
         .execute(&pool)
         .await;
+    match row {
+        Ok(_) => info!("Inserted successfully"),
+        Err(e) => error!("Error {}", e),
+    }
 }

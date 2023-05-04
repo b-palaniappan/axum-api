@@ -3,7 +3,7 @@ Rust Axum REST api application
 
 ## Features
 - [x] Create REST API with Axum.
-- [ ] Basic CRUD calls using SQLX with MySQL DB.
+- [ ] Basic CRUD calls using SeaORM with MySQL DB.
 - [x] Logging.
 - [x] JSON request payload validation.
 - [ ] Add JWT security.

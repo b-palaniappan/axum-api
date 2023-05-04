@@ -20,7 +20,8 @@ panic = "abort"
 
 [dependencies]
 # core axum library
-axum = "^0"
+axum = { version = "^0", features = ["headers"] }
+tower-http = { version = "^0", features = ["cors"] }
 
 # JSON parser
 serde = { version = "^1.0", features = ["derive"] }
@@ -28,9 +29,10 @@ serde_json = "^1.0"
 
 # SQL with MySQL.
 sqlx = { version = "^0", features = ["mysql", "runtime-tokio-rustls", "chrono", "json"] }
+sea-orm = { version = "^0", features = ["sqlx-mysql", "runtime-tokio-rustls"] }
 
 # Async
-tokio = { version = "^1.0", features = ["full"] }
+tokio = { version = "^1.0", features = ["macros", "rt-multi-thread"] }
 
 # Logging / Tracing.
 tracing = "^0"
