@@ -20,6 +20,7 @@ pub mod api {
     pub mod model;
 }
 
+pub mod error;
 pub mod service;
 
 pub mod db {
@@ -51,13 +52,6 @@ pub async fn run() {
             panic!("Failed to create database connection pool: {}", e);
         })
         .unwrap();
-
-    // Trigger migration scripts for MySQL using SQLX
-    // let response = sqlx::migrate!("./migrations").run(&pool).await;
-    // match response {
-    //     Ok(_) => info!("Migration completed successfully"),
-    //     Err(e) => error!("Error in DB Migration: {}", e),
-    // }
 
     // CORS Middleware
     let cors = CorsLayer::new()
