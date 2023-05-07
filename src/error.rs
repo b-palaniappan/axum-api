@@ -3,7 +3,6 @@ use serde_json::json;
 
 pub enum AppError {
     InternalServerError,
-    UserNotFoundError,
 }
 
 pub struct Error {

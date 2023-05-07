@@ -1,17 +1,14 @@
 use crate::api::model::api_error::ApiErrorResponse;
-use axum::extract::State;
-use axum::headers::UserAgent;
-use axum::http::{HeaderMap, Method, StatusCode};
-use axum::response::{IntoResponse, Response};
-use axum::routing::get;
-use axum::{Json, Router, TypedHeader};
+use axum::http::Method;
+use axum::response::IntoResponse;
+use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
+use sea_orm::{ConnectOptions, Database};
 use serde::{Deserialize, Serialize};
-use sqlx::mysql::MySqlPoolOptions;
-use sqlx::{Error, MySqlPool};
 use std::env;
 use std::net::SocketAddr;
+use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
 
@@ -41,11 +38,18 @@ pub async fn run() {
     let server_port = env::var("SERVER_PORT").expect("Error getting server port");
     let server_addr = server_host + ":" + &*server_port;
 
-    // Setup connection pool.
-    let pool = MySqlPoolOptions::new()
-        .max_connections(10)
-        .min_connections(1)
-        .connect(&db_connection_str)
+    // Setup DB connection for Sea-ORM.
+    let mut db_opt = ConnectOptions::new(db_connection_str);
+    db_opt
+        .max_connections(100)
+        .min_connections(5)
+        .connect_timeout(Duration::from_secs(5))
+        .acquire_timeout(Duration::from_secs(5))
+        .idle_timeout(Duration::from_secs(8))
+        .max_lifetime(Duration::from_secs(8))
+        .set_schema_search_path("axum".into());
+
+    let db = Database::connect(db_opt)
         .await
         .map_err(|e| {
             error!("Failed to create database connection pool: {}", e);
@@ -66,11 +70,10 @@ pub async fn run() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/json", get(handler_json))
         .nest("/hello", api::handlers::hello_handler::routes())
         .nest("/users", api::handlers::users_handler::routes())
         .layer(cors)
-        .with_state(pool);
+        .with_state(db);
 
     let app = app.fallback(handler_404);
 
@@ -100,36 +103,4 @@ async fn handler_404() -> impl IntoResponse {
 struct Message {
     message: String,
     status: String,
-}
-
-// TODO: Delete this after playing with JSON handlers
-async fn handler_json(
-    State(pool): State<MySqlPool>,
-    TypedHeader(user_agent): TypedHeader<UserAgent>,
-    headers: HeaderMap,
-) -> Response {
-    info!("Handle Json payload");
-    // Get user agent header.
-    info!("User agent - {}", user_agent);
-    // Get custom header from Request header.
-    let header_value = headers.get("x-server-version").unwrap().to_str().unwrap();
-    info!("Custom user header - {}", header_value);
-
-    // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
-    let response: Result<(String,), Error> =
-        sqlx::query_as("SELECT 'Hello'").fetch_one(&pool).await;
-    match response {
-        Ok(r) => info!("DB Response -> {}", r.0),
-        Err(e) => error!("Error getting data {}", e),
-    }
-
-    // With custom Response Code.
-    (
-        StatusCode::CREATED,
-        Json(Message {
-            message: "Hello".to_string(),
-            status: "Success".to_string(),
-        }),
-    )
-        .into_response()
 }
