@@ -3,26 +3,27 @@ use validator::Validate;
 
 #[derive(Debug, Validate, Serialize, Deserialize)]
 pub struct CreateUser {
-    #[validate(length(min = 2))]
+    #[validate(length(min = 2, message = "First name have to be at least 2 characters"))]
     #[serde(rename = "firstName")]
     pub first_name: String,
     #[serde(rename = "lastName")]
     pub last_name: String,
-    #[validate(email(message = "invalid email address"))]
+    #[validate(email(message = "Invalid email address"))]
     pub email: String,
     #[serde(rename = "addressLineOne")]
     pub address_line_one: String,
     #[serde(rename = "addressLineTwo")]
-    pub address_line_tow: Option<String>,
+    pub address_line_two: Option<String>,
     pub city: String,
     #[validate(length(equal = 2, message = "State have to be 2 character"))]
     pub state: String,
+    #[validate(length(equal = 2, message = "Country have to be 2 character ISO code"))]
     pub country: String,
 }
 
 #[derive(Debug, Validate, Serialize, Deserialize)]
 pub struct UpdateUser {
-    #[validate(length(min = 2))]
+    #[validate(length(min = 2, message = "First name have to be at least 2 characters"))]
     #[serde(rename = "firstName")]
     pub first_name: String,
     #[serde(rename = "lastName")]
@@ -34,14 +35,15 @@ pub struct UpdateUser {
     #[serde(rename = "addressLineTwo")]
     pub address_line_tow: Option<String>,
     pub city: String,
-    #[validate(length(equal = 2))]
+    #[validate(length(equal = 2, message = "State have to be 2 character"))]
     pub state: String,
+    #[validate(length(equal = 2, message = "Country have to be 2 character ISO code"))]
     pub country: String,
 }
 
 #[derive(Debug, Validate, Serialize, Deserialize)]
 pub struct PatchUser {
-    #[validate(length(min = 2))]
+    #[validate(length(min = 2, message = "First name have to be at least 2 characters"))]
     #[serde(rename = "firstName")]
     pub first_name: Option<String>,
     #[serde(rename = "lastName")]
@@ -53,14 +55,16 @@ pub struct PatchUser {
     #[serde(rename = "addressLineTwo")]
     pub address_line_tow: Option<String>,
     pub city: Option<String>,
-    #[validate(length(equal = 2))]
+    #[validate(length(equal = 2, message = "State have to be 2 character"))]
     pub state: Option<String>,
+    #[validate(length(equal = 2, message = "Country have to be 2 character ISO code"))]
     pub country: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoredUser {
     pub id: i64,
+    pub key: String,
     #[serde(rename = "firstName")]
     pub first_name: String,
     #[serde(rename = "lastName")]

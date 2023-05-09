@@ -48,3 +48,4 @@ rand = "0"
 chrono = "^0"
 dotenvy = "^0"
 derive_more = "^0"
+nanoid = "0"        # to generate unique ids
