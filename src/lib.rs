@@ -98,9 +98,3 @@ async fn handler_404() -> impl IntoResponse {
         sub_errors: vec![],
     })
 }
-
-#[derive(Serialize, Deserialize)]
-struct Message {
-    message: String,
-    status: String,
-}

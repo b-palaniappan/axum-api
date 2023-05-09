@@ -1,21 +1,35 @@
 use axum::extract::{Path, State};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use sea_orm::DatabaseConnection;
-use tracing::{error, info};
-use validator::Validate;
+use tracing::{error, info, warn};
+use validator::{Validate, ValidationErrors};
 
 use crate::api::model::api_error::ApiErrorResponse;
 use crate::api::model::users::{CreateUser, StoredUser, UpdateUser};
+use crate::error::{ApiError, AppError};
 use crate::service::user_service;
 
 // Create user
 async fn create_user(
     State(db): State<DatabaseConnection>,
     Json(user): Json<CreateUser>,
-) -> impl IntoResponse {
+) -> Result<Response, AppError> {
     info!("Create a new User");
+    match user.validate() {
+        Ok(u) => {
+            info!("User payload: {:?}", u);
+            Ok(Json("Create user by id").into_response())
+        }
+        Err(err) => {
+            warn!("Validation error: {}", err);
+            Err(AppError::ValidationError {
+                validation_error: err,
+                object: "User".to_string(),
+            })
+        }
+    }
 }
 
 // Get user

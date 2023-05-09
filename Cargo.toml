@@ -47,3 +47,4 @@ rand = "0"
 # Utils
 chrono = "^0"
 dotenvy = "^0"
+derive_more = "^0"

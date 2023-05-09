@@ -8,14 +8,14 @@ pub struct CreateUser {
     pub first_name: String,
     #[serde(rename = "lastName")]
     pub last_name: String,
-    #[validate(email)]
+    #[validate(email(message = "invalid email address"))]
     pub email: String,
     #[serde(rename = "addressLineOne")]
     pub address_line_one: String,
     #[serde(rename = "addressLineTwo")]
     pub address_line_tow: Option<String>,
     pub city: String,
-    #[validate(length(equal = 2))]
+    #[validate(length(equal = 2, message = "State have to be 2 character"))]
     pub state: String,
     pub country: String,
 }
