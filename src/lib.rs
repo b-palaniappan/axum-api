@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, Database};
-use serde::{Deserialize, Serialize};
 use std::env;
 use std::net::SocketAddr;
 use std::time::Duration;

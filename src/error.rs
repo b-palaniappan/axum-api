@@ -1,10 +1,10 @@
-use std::borrow::Cow;
 use axum::response::Response;
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use chrono::{SecondsFormat, Utc};
 use derive_more::{Display, Error};
 use serde::Serialize;
 use serde_json::json;
+use std::borrow::Cow;
 use tracing::info;
 use validator::ValidationErrors;
 
@@ -71,7 +71,11 @@ impl IntoResponse for AppError {
                             object: object.to_string(),
                             field: field.to_owned(),
                             rejected_value: field_error.params.get("value").unwrap().to_string(),
-                            message: field_error.message.as_ref().unwrap_or_else(|| &Cow::Borrowed("")).to_string(),
+                            message: field_error
+                                .message
+                                .as_ref()
+                                .unwrap_or_else(|| &Cow::Borrowed(""))
+                                .to_string(),
                         })
                     }
                 }

@@ -1,13 +1,12 @@
-use axum::extract::State;
-use axum::Json;
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime, SecondsFormat, Utc};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, JsonValue};
-use nanoid::nanoid;
-use sea_orm::ActiveValue::Set;
-use serde_json::json;
-use tracing::info;
 use crate::api::model::users::{CreateUser, StoredUser};
 use crate::db::entity::{address, users};
+use axum::extract::State;
+use chrono::{Utc};
+use nanoid::nanoid;
+use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, DatabaseConnection};
+use serde_json::json;
+use tracing::info;
 
 pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateUser) -> StoredUser {
     let user = users::ActiveModel {
@@ -45,7 +44,7 @@ pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateU
     StoredUser {
         id: user_id as i64,
         key: String::from_utf8_lossy(&user_resp.key.unwrap()).to_string(),
-        first_name: user_resp.first_name.unwrap().unwrap(),
+        first_name: user_resp.first_name.unwrap().unwrap_or_else(|| String::from("")),
         last_name: user_resp.last_name.unwrap(),
         email: user_resp.email.unwrap(),
         address_line_one: address_resp.line_one.unwrap(),
@@ -54,5 +53,4 @@ pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateU
         state: address_resp.state.unwrap(),
         country: address_resp.country.unwrap(),
     }
-
 }

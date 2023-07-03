@@ -1,12 +1,12 @@
 [package]
 name = "axum-api"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Bala", "bala@c12.io"]
-description = "Axum Web API application with SQLx MySQL backend persistance"
+description = "Axum Web API application with SeaORM MySQL backend persistance"
 readme = "README.md"
 license = "MIT"
-keywords = ["API", "axum", "mysql", "SQLx"]
+keywords = ["API", "axum", "mysql", "SeaORM"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
