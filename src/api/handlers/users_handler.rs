@@ -1,14 +1,14 @@
+use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use axum::{Json, Router};
 use sea_orm::DatabaseConnection;
-use tracing::{info, warn};
-use validator::{Validate, ValidationErrors};
+use tracing::{error, info, warn};
+use validator::Validate;
 
-use crate::api::model::users::{CreateUser, StoredUser, UpdateUser};
-use crate::error::{ApiError, AppError};
+use crate::api::model::users::{CreateUser, UpdateUser};
+use crate::error::AppError;
 use crate::service::user_service;
 
 // Create user
@@ -20,8 +20,17 @@ async fn create_user(
     match user.validate() {
         Ok(_) => {
             info!("User payload: {:?}", user);
-            let response = user_service::add_user(State(db), user).await;
-            info!("Response in controller - {:?}", response);
+            let response = user_service::add_user(State(db), user).await.unwrap();
+            info!("Response in controller - {:?}", &response);
+            // match &response {
+            //     Ok(res) => {
+            //         Ok((StatusCode::CREATED, Json(res)).into_response())
+            //     }
+            //     Err(e) => {
+            //         error!("Server error - {}", e);
+            //         Err(AppError::InternalServerError)
+            //     }
+            // }
             Ok((StatusCode::CREATED, Json(response)).into_response())
         }
         Err(err) => {
