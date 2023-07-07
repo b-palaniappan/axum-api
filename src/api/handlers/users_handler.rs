@@ -1,8 +1,8 @@
-use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
+use axum::{Json, Router};
 use sea_orm::DatabaseConnection;
 use tracing::{error, info, warn};
 use validator::Validate;
@@ -22,15 +22,6 @@ async fn create_user(
             info!("User payload: {:?}", user);
             let response = user_service::add_user(State(db), user).await.unwrap();
             info!("Response in controller - {:?}", &response);
-            // match &response {
-            //     Ok(res) => {
-            //         Ok((StatusCode::CREATED, Json(res)).into_response())
-            //     }
-            //     Err(e) => {
-            //         error!("Server error - {}", e);
-            //         Err(AppError::InternalServerError)
-            //     }
-            // }
             Ok((StatusCode::CREATED, Json(response)).into_response())
         }
         Err(err) => {

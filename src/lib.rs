@@ -1,6 +1,6 @@
 use crate::api::model::api_error::ApiErrorResponse;
-use axum::http::Method;
-use axum::response::IntoResponse;
+use axum::http::{Method, Request};
+use axum::response::{IntoResponse, Response};
 use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
@@ -8,8 +8,11 @@ use sea_orm::{ConnectOptions, Database};
 use std::env;
 use std::net::SocketAddr;
 use std::time::Duration;
+use axum::extract::MatchedPath;
+use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::{error, info};
+use tower_http::trace::TraceLayer;
+use tracing::{error, info, info_span, Span};
 
 pub mod api {
     pub mod handlers;
@@ -72,8 +75,30 @@ pub async fn run() {
         .nest("/hello", api::handlers::hello_handler::routes())
         .nest("/users", api::handlers::users_handler::routes())
         .layer(cors)
+        // Logging middleware with Tower & Tracing.
+        .layer(TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
+            let matched_path = request
+                .extensions()
+                .get::<MatchedPath>()
+                .map(MatchedPath::as_str);
+
+            info_span!(
+                        "http_request",
+                        method = ?request.method(),
+                        matched_path,
+                        some_other_field = tracing::field::Empty,
+                    )
+        }).on_request(|_request: &Request<_>, _span: &Span| {
+            info!("Request {:?}", _span);
+        }).on_response(|_response: &Response, _latency: Duration, _span: &Span|{
+            info!("Response latency {:?}", _latency);
+        }).on_failure(|_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
+            info!("Failure {:?}", _error);
+        })
+        )
         .with_state(db);
 
+    // 404 NOT FOUND handler
     let app = app.fallback(handler_404);
 
     // run it
