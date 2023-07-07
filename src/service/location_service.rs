@@ -5,6 +5,7 @@ use tracing::info;
 
 use crate::api::model::location::{Items, Position};
 
+// Service to make external API calls to Here Maps api and get Geo Location information.
 pub async fn get_geo_location(address: &String) -> Result<Position, Box<dyn Error>> {
     let here_api_url = "https://geocode.search.hereapi.com";
     let here_api_key = std::env::var("HERE_MAP_API_KEY");
@@ -35,7 +36,7 @@ pub async fn get_geo_location(address: &String) -> Result<Position, Box<dyn Erro
                         None => {
                             Err(Box::try_from(anyhow::Error::msg("Location Error")).unwrap())
                         }
-                    }
+                    };
                 }
             }
         }

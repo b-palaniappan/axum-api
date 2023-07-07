@@ -5,8 +5,8 @@ use sea_orm::EntityTrait;
 use sea_orm::Set;
 use tracing::info;
 
-use crate::db::entity::events::Entity as Events;
 use crate::db::entity::{events, sea_orm_active_enums::Type};
+use crate::db::entity::events::Entity as Events;
 
 pub async fn create_event(State(db): State<DatabaseConnection>) {
     let event = events::ActiveModel {

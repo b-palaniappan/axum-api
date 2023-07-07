@@ -1,6 +1,6 @@
 [package]
 name = "axum-api"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Bala", "bala@c12.io"]
 description = "Axum Web API application with SeaORM MySQL backend persistance"

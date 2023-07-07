@@ -1,18 +1,20 @@
-use crate::api::model::api_error::ApiErrorResponse;
-use axum::http::{Method, Request};
-use axum::response::{IntoResponse, Response};
-use axum::{Json, Router};
-use chrono::{SecondsFormat, Utc};
-use dotenvy::dotenv;
-use sea_orm::{ConnectOptions, Database};
 use std::env;
 use std::net::SocketAddr;
 use std::time::Duration;
+
+use axum::{Json, Router};
 use axum::extract::MatchedPath;
+use axum::http::{Method, Request};
+use axum::response::{IntoResponse, Response};
+use chrono::{SecondsFormat, Utc};
+use dotenvy::dotenv;
+use sea_orm::{ConnectOptions, Database};
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, info_span, Span};
+
+use crate::api::model::api_error::ApiErrorResponse;
 
 pub mod api {
     pub mod handlers;
@@ -90,7 +92,7 @@ pub async fn run() {
                     )
         }).on_request(|_request: &Request<_>, _span: &Span| {
             info!("Request {:?}", _span);
-        }).on_response(|_response: &Response, _latency: Duration, _span: &Span|{
+        }).on_response(|_response: &Response, _latency: Duration, _span: &Span| {
             info!("Response latency {:?}", _latency);
         }).on_failure(|_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
             info!("Failure {:?}", _error);
