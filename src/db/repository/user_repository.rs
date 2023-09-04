@@ -7,8 +7,16 @@ pub async fn create_user(State(db): State<DatabaseConnection>, create_user: &Cre
     todo!()
 }
 
-pub async fn update_user(State(db): State<DatabaseConnection>, id: i64, update_user: &UpdateUser) {
+pub async fn get_all_users(State(db): State<DatabaseConnection>) {
     todo!()
+}
+
+pub async fn get_user_by_key(db: &DatabaseConnection, key: String) {
+    todo!()
+}
+
+pub async fn update_user(State(db): State<DatabaseConnection>, id: i64, update_user: &UpdateUser) {
+
 }
 
 pub async fn delete_user(State(db): State<DatabaseConnection>, id: i64) {

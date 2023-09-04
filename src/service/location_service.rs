@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use reqwest::{Client, header};
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::api::model::location::{Items, Position};
 
@@ -34,6 +34,7 @@ pub async fn get_geo_location(address: &String) -> Result<Position, Box<dyn Erro
                             Ok(location_geo_code)
                         }
                         None => {
+                            warn!("Location error 1");
                             Err(Box::try_from(anyhow::Error::msg("Location Error")).unwrap())
                         }
                     };
@@ -41,9 +42,10 @@ pub async fn get_geo_location(address: &String) -> Result<Position, Box<dyn Erro
             }
         }
         Err(_) => {
+            warn!("Unable to get api key");
             return Err(Box::try_from(anyhow::Error::msg("Unable to get api key")).unwrap());
         }
     }
-
-    return Err(Box::try_from(anyhow::Error::msg("Location Error")).unwrap());
+    warn!("Location Not Found");
+    Err(Box::try_from(anyhow::Error::msg("Location Not Found")).unwrap())
 }

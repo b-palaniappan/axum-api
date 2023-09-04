@@ -51,7 +51,7 @@ pub async fn run() {
         .acquire_timeout(Duration::from_secs(5))
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
-        .set_schema_search_path("axum".into());
+        .set_schema_search_path("axum".to_owned());
 
     let db = Database::connect(db_opt)
         .await

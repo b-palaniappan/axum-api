@@ -20,7 +20,7 @@ panic = "abort"
 
 [dependencies]
 # core axum library
-axum = { version = "^0", features = ["headers"] }
+axum = { version = "^0", features = ["headers", "macros"] }
 tower-http = { version = "^0", features = ["cors", "trace"] }
 
 # JSON parser

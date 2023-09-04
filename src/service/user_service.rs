@@ -9,7 +9,7 @@ use serde_json::json;
 use tracing::info;
 
 use crate::api::model::users::{CreateUser, StoredUser};
-use crate::db::entity::{address, users};
+use crate::db::entity::address;
 use crate::db::entity::users::ActiveModel;
 use crate::service::location_service::get_geo_location;
 
@@ -25,14 +25,35 @@ pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateU
         ..Default::default()
     };
 
-    let transaction_resp = &db.transaction::<_, (ActiveModel, address::ActiveModel), DbErr>(|txn| {
+    // Call location service to get get location info.
+    // let location_position = get_geo_location(&create_user.address_line_one).await;
+    //
+    // let geocode = if let Ok(position) = location_position {
+    //     info!("Location Position - {:?}", &position);
+    //     json!({
+    //         "lat": &position.lat,
+    //         "lng": &position.lng,
+    //     })
+    // } else {
+    //     warn!("Error getting position.");
+    //     json!({
+    //         "lat": 0,
+    //         "lng": 0,
+    //     })
+    // };
+
+    // This works.. but getting error for above code.
+    let location_position = get_geo_location(&create_user.address_line_one).await?;
+    let geocode = json!({
+        "lat": &location_position.lat,
+        "lng": &location_position.lng,
+    });
+
+
+    let transaction_resp = db.transaction::<_, (ActiveModel, address::ActiveModel), DbErr>(|txn| {
         Box::pin(async move {
             let user_resp = user.save(txn).await?;
             info!("Response in service -> {:?}", &user_resp);
-
-            // Call location service to get get location info.
-            let location_position = get_geo_location(&create_user.address_line_one).await.unwrap();
-            info!("Location Position - {:?}", &location_position);
 
             let user_id = &user_resp.id;
 
@@ -44,10 +65,7 @@ pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateU
                 city: Set(create_user.city),
                 state: Set(create_user.state),
                 country: Set(create_user.country),
-                geocode: Set(json!({
-                    "lat": &location_position.lat,
-                    "lng": &location_position.lng,
-                })),
+                geocode: Set(geocode),
                 created_at: Set(now),
                 updated_at: Set(now),
                 ..Default::default()
@@ -56,9 +74,9 @@ pub async fn add_user(State(db): State<DatabaseConnection>, create_user: CreateU
             let address_resp = address.save(txn).await?;
             Ok((user_resp, address_resp))
         })
-    }).await;
+    }).await?;
 
-    let (saved_user, saved_address) = transaction_resp.as_ref().unwrap();
+    let (saved_user, saved_address) = transaction_resp;
 
     Ok(StoredUser {
         id: saved_user.id.to_owned().unwrap() as i64,
