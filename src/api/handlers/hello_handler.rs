@@ -1,7 +1,7 @@
-use axum::{Json, Router};
 use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::routing::get;
+use axum::{Json, Router};
 use sea_orm::DatabaseConnection;
 use tracing::info;
 

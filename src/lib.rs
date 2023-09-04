@@ -2,10 +2,10 @@ use std::env;
 use std::net::SocketAddr;
 use std::time::Duration;
 
-use axum::{Json, Router};
 use axum::extract::MatchedPath;
 use axum::http::{Method, Request};
 use axum::response::{IntoResponse, Response};
+use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, Database};
@@ -78,25 +78,32 @@ pub async fn run() {
         .nest("/users", api::handlers::users_handler::routes())
         .layer(cors)
         // Logging middleware with Tower & Tracing.
-        .layer(TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
-            let matched_path = request
-                .extensions()
-                .get::<MatchedPath>()
-                .map(MatchedPath::as_str);
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<_>| {
+                    let matched_path = request
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str);
 
-            info_span!(
+                    info_span!(
                         "http_request",
                         method = ?request.method(),
                         matched_path,
                         some_other_field = tracing::field::Empty,
                     )
-        }).on_request(|_request: &Request<_>, _span: &Span| {
-            info!("Request {:?}", _span);
-        }).on_response(|_response: &Response, _latency: Duration, _span: &Span| {
-            info!("Response latency {:?}", _latency);
-        }).on_failure(|_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
-            info!("Failure {:?}", _error);
-        })
+                })
+                .on_request(|_request: &Request<_>, _span: &Span| {
+                    info!("Request {:?}", _span);
+                })
+                .on_response(|_response: &Response, _latency: Duration, _span: &Span| {
+                    info!("Response latency {:?}", _latency);
+                })
+                .on_failure(
+                    |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
+                        info!("Failure {:?}", _error);
+                    },
+                ),
         )
         .with_state(db);
 

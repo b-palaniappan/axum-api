@@ -1,8 +1,8 @@
-use axum::{debug_handler, Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
+use axum::{debug_handler, Json, Router};
 use sea_orm::DatabaseConnection;
 use tracing::{info, warn};
 use validator::Validate;
@@ -28,7 +28,9 @@ async fn create_user(
     })?;
     info!("User payload: {:?}", user);
 
-    let stored_user = user_service::add_user(State(db), user).await.map_err(|_| AppError::InternalServerError)?;
+    let stored_user = user_service::add_user(State(db), user)
+        .await
+        .map_err(|_| AppError::InternalServerError)?;
     info!("Response in controller - {:?}", &stored_user);
 
     Ok((StatusCode::CREATED, Json(stored_user)))

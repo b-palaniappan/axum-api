@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use reqwest::{Client, header};
+use reqwest::{header, Client};
 use tracing::{info, warn};
 
 use crate::api::model::location::{Items, Position};
@@ -15,7 +15,11 @@ pub async fn get_geo_location(address: &String) -> Result<Position, Box<dyn Erro
             let location_response = Client::new()
                 .get(here_api_url.to_owned() + "/v1/geocode")
                 .header(header::CONTENT_TYPE, "application/json")
-                .query(&[("q", address), ("apiKey", &api_key.to_owned()), ("in", &"countryCode:USA".to_owned())])
+                .query(&[
+                    ("q", address),
+                    ("apiKey", &api_key.to_owned()),
+                    ("in", &"countryCode:USA".to_owned()),
+                ])
                 .send()
                 .await?;
 
