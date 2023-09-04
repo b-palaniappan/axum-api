@@ -18,6 +18,6 @@ pub async fn create_event(State(db): State<DatabaseConnection>, create_event: Cr
     let response = event.save(&db).await.unwrap();
     info!("Saved value -> {:?}", response);
 
-    let event_found = Events::find_by_id(2 as u64).one(&db).await.unwrap();
-    info!("Search value -> {:?}", event_found)
+    let event_found = Events::find_by_id(2u64).one(&db).await.unwrap();
+    info!("Search value -> {:?}", event_found);
 }

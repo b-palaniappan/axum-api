@@ -26,24 +26,36 @@ async fn create_user(
             object: "User".to_string(),
         }
     })?;
-    info!("User payload: {:?}", user);
-
     let stored_user = user_service::add_user(State(db), user)
         .await
         .map_err(|_| AppError::InternalServerError)?;
-    info!("Response in controller - {:?}", &stored_user);
-
     Ok((StatusCode::CREATED, Json(stored_user)))
 }
 
+async fn get_all_users(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse, AppError> {
+    let stored_user_vec = user_service::get_all_users(State(db)).await.map_err(|_| AppError::InternalServerError)?;
+    Ok((StatusCode::OK, Json(stored_user_vec)))
+}
+
 // Get user
-// TODO: Need to be implemented
 async fn get_user(
     State(db): State<DatabaseConnection>,
-    Path(id): Path<String>,
-) -> Result<Response, AppError> {
-    info!("Get user by id - {}", id);
-    Ok((StatusCode::OK, Json("Get user by id")).into_response())
+    Path(key): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Get user by id - {}", key);
+
+    let stored_user = user_service::get_user_by_key(State(db), key)
+        .await
+        .map_err(|e| {
+            warn!(" Error - {}", e.to_string());
+            if e.to_string().contains("RecordNotFound") {
+                AppError::ResourceNotFound
+            } else {
+                AppError::InternalServerError
+            }
+        })?;
+
+    Ok((StatusCode::OK, Json(stored_user)))
 }
 
 // Update user
@@ -71,6 +83,6 @@ async fn delete_user(
 // Router function for hello handler
 pub fn routes() -> Router<DatabaseConnection> {
     Router::new()
-        .route("/", post(create_user))
+        .route("/", post(create_user).get(get_all_users))
         .route("/:id", get(get_user).put(update_user).delete(delete_user))
 }

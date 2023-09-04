@@ -73,7 +73,7 @@ pub struct StoredUser {
     #[serde(rename = "addressLineOne")]
     pub address_line_one: String,
     #[serde(rename = "addressLineTwo")]
-    pub address_line_tow: Option<String>,
+    pub address_line_two: Option<String>,
     pub city: String,
     pub state: String,
     pub country: String,

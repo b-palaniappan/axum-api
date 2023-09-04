@@ -59,6 +59,16 @@ impl IntoResponse for AppError {
                     sub_errors: vec![],
                 },
             ),
+            Self::ResourceNotFound => (
+                StatusCode::NOT_FOUND,
+                ApiError {
+                    status: StatusCode::NOT_FOUND.as_u16(),
+                    time: Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true),
+                    message: self.to_string(),
+                    debug_message: None,
+                    sub_errors: vec![],
+                },
+            ),
             Self::ValidationError {
                 validation_error,
                 object,
