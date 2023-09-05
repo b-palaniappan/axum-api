@@ -6,8 +6,8 @@ use nanoid::nanoid;
 use sea_orm::ActiveValue::Set;
 use sea_orm::DbErr::RecordNotFound;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter,
-    TransactionTrait,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, ModelTrait,
+    QueryFilter, TransactionTrait,
 };
 use serde_json::json;
 use tracing::info;
@@ -114,19 +114,17 @@ pub async fn get_user_by_key(
 ) -> Result<StoredUser, Box<dyn Error>> {
     let users: Vec<(users::Model, Option<address::Model>)> = Users::find()
         .find_also_related(Address)
-        .filter(users::Column::Key.eq(key))
+        .filter(
+            Condition::all()
+                .add(users::Column::Key.eq(key))
+                .add(users::Column::DeletedAt.is_null()),
+        )
         .all(&db)
         .await?;
 
     if let Some((user, address)) = users.get(0).cloned() {
         let (a_line_one, a_line_two, a_city, a_state, a_country) = match address {
-            Some(a) => (
-                a.line_one,
-                a.line_two,
-                a.city,
-                a.state,
-                a.country,
-            ),
+            Some(a) => (a.line_one, a.line_two, a.city, a.state, a.country),
             None => (
                 "".to_owned(),
                 None,
@@ -159,19 +157,17 @@ pub async fn get_user_by_key(
 pub async fn get_all_users(
     State(db): State<DatabaseConnection>,
 ) -> Result<Vec<StoredUser>, Box<dyn Error>> {
-    let all_users = Users::find().find_also_related(Address).all(&db).await?;
+    let all_users = Users::find()
+        .filter(users::Column::DeletedAt.is_null())
+        .find_also_related(Address)
+        .all(&db)
+        .await?;
     let mut users_all_vec: Vec<StoredUser> = Vec::new();
 
     for user in &all_users {
         let (user, address) = user.clone();
         let (a_line_one, a_line_two, a_city, a_state, a_country) = match address {
-            Some(a) => (
-                a.line_one,
-                a.line_two,
-                a.city,
-                a.state,
-                a.country,
-            ),
+            Some(a) => (a.line_one, a.line_two, a.city, a.state, a.country),
             None => (
                 "".to_owned(),
                 None,
@@ -193,6 +189,28 @@ pub async fn get_all_users(
             country: a_country,
         });
     }
-
     Ok(users_all_vec)
+}
+
+pub async fn delete_user_by_key(
+    State(db): State<DatabaseConnection>,
+    key: String,
+) -> Result<(), Box<dyn Error>> {
+    // find user by key
+    let user = Users::find()
+        .filter(
+            Condition::all()
+                .add(users::Column::Key.eq(key))
+                .add(users::Column::DeletedAt.is_null()),
+        )
+        .one(&db)
+        .await?;
+
+    // Set Users and Address deleted at date to current date.
+    let now = Utc::now().naive_utc();
+    let mut user_model: users::ActiveModel = user.unwrap().into();
+    user_model.deleted_at = Set(Some(now));
+    user_model.update(&db).await?;
+
+    Ok(())
 }

@@ -1,3 +1,4 @@
+use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -32,8 +33,12 @@ async fn create_user(
     Ok((StatusCode::CREATED, Json(stored_user)))
 }
 
-async fn get_all_users(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse, AppError> {
-    let stored_user_vec = user_service::get_all_users(State(db)).await.map_err(|_| AppError::InternalServerError)?;
+async fn get_all_users(
+    State(db): State<DatabaseConnection>,
+) -> Result<impl IntoResponse, AppError> {
+    let stored_user_vec = user_service::get_all_users(State(db))
+        .await
+        .map_err(|_| AppError::InternalServerError)?;
     Ok((StatusCode::OK, Json(stored_user_vec)))
 }
 
@@ -74,10 +79,16 @@ async fn update_user(
 // Delete user
 async fn delete_user(
     State(db): State<DatabaseConnection>,
-    Path(id): Path<String>,
-) -> Result<Response, AppError> {
-    info!("Delete user by id - {}", id);
-    Ok((StatusCode::NO_CONTENT, Json("Delete user by id")).into_response())
+    Path(key): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    let response = user_service::delete_user_by_key(State(db), key)
+        .await
+        .map_err(|_| AppError::InternalServerError)?;
+    Ok(Response::builder()
+        .status(StatusCode::NO_CONTENT)
+        .body(Body::empty())
+        .unwrap()
+        .into_response())
 }
 
 // Router function for hello handler

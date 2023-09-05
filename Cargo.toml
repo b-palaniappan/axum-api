@@ -44,7 +44,7 @@ tracing-subscriber = { version = "^0", features = ["env-filter"] }
 validator = { version = "^0", features = ["derive"] }
 
 # Security
-rust-argon2 = "^1"
+rust-argon2 = "^2"
 rand = "^0"
 
 # Error Handling.
