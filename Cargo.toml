@@ -1,12 +1,12 @@
 [package]
 name = "axum-api"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2021"
 authors = ["Bala", "bala@c12.io"]
-description = "Axum Web API application with SQLx MySQL backend persistance"
+description = "Axum Web API application with SeaORM MySQL backend persistance"
 readme = "README.md"
 license = "MIT"
-keywords = ["API", "axum", "mysql", "SQLx"]
+keywords = ["API", "axum", "mysql", "SeaORM"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -20,15 +20,17 @@ panic = "abort"
 
 [dependencies]
 # core axum library
-axum = { version = "^0", features = ["headers"] }
-tower-http = { version = "^0", features = ["cors"] }
+axum = { version = "^0", features = ["headers", "macros"] }
+tower-http = { version = "^0", features = ["cors", "trace"] }
 
 # JSON parser
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
 
-# SQL with MySQL.
-sqlx = { version = "^0", features = ["mysql", "runtime-tokio-rustls", "chrono", "json"] }
+# Rest client
+reqwest = { version = "^0", features = ["json"] }
+
+# SEA ORM with MySQL.
 sea-orm = { version = "^0", features = ["sqlx-mysql", "runtime-tokio-rustls"] }
 
 # Async
@@ -42,9 +44,14 @@ tracing-subscriber = { version = "^0", features = ["env-filter"] }
 validator = { version = "^0", features = ["derive"] }
 
 # Security
-rust-argon2 = "1"
-rand = "0"
+rust-argon2 = "^2"
+rand = "^0"
+
+# Error Handling.
+anyhow = "^1"
 
 # Utils
 chrono = "^0"
 dotenvy = "^0"
+derive_more = "^0"
+nanoid = "^0"        # to generate unique ids
