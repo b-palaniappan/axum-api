@@ -1,26 +1,23 @@
-use crate::db::entity::event_entity::Event;
 use axum::extract::State;
-use chrono::Utc;
-use sqlx::{query, MySqlPool};
-use tracing::{error, info};
+use sea_orm::ActiveModelTrait;
+use sea_orm::ActiveValue::Set;
+use sea_orm::DatabaseConnection;
+use sea_orm::EntityTrait;
+use tracing::info;
 
-// Create a new event.
-pub async fn create_event(
-    State(pool): State<MySqlPool>,
-    event: &Event,
-    info: String,
-    user_id: i64,
-) {
-    let row = query("INSERT INTO users(type, name, info, time, user_id) values(?, ?, ?, ?, ?)")
-        .bind(serde_json::to_string(&event.event_type).unwrap_or("".to_string()))
-        .bind(serde_json::to_string(&event.event_name).unwrap_or("".to_string()))
-        .bind(info)
-        .bind(Utc::now())
-        .bind(user_id)
-        .execute(&pool)
-        .await;
-    match row {
-        Ok(_) => info!("Inserted successfully"),
-        Err(e) => error!("Error {}", e),
-    }
+use crate::api::model::events::CreateEvent;
+use crate::db::entity::events::{ActiveModel, Entity as Events};
+use crate::db::entity::sea_orm_active_enums::Type;
+
+pub async fn create_event(State(db): State<DatabaseConnection>, create_event: CreateEvent) {
+    let event = ActiveModel {
+        r#type: Set(Type::Auth),
+        name: Set(create_event.name.to_owned()),
+        ..Default::default()
+    };
+    let response = event.save(&db).await.unwrap();
+    info!("Saved value -> {:?}", response);
+
+    let event_found = Events::find_by_id(2u64).one(&db).await.unwrap();
+    info!("Search value -> {:?}", event_found);
 }

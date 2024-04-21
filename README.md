@@ -1,7 +1,9 @@
 # axum API application
+
 Rust Axum REST api application
 
 ## Features
+
 - [x] Create REST API with Axum.
 - [ ] Basic CRUD calls using SeaORM with MySQL DB.
 - [x] Logging.
@@ -13,7 +15,17 @@ Rust Axum REST api application
 - [ ] CORS support for API.
 - [ ] Custom validation error response.
 
+### Generate Entity using Sea-ORM cli
+
+- Create DB Schema and create tables with constrains
+- Run the command to create entities from database,
+
+```bash
+sea-orm-cli generate entity -o ./src/db/entity
+```
+
 #### Global Error Handing Response payload
+
 ```json
 {
   "status": 404,
@@ -32,6 +44,7 @@ Rust Axum REST api application
 ```
 
 #### Pagination response structure
+
 ```json
 {
   "data": [{
@@ -73,4 +86,5 @@ Rust Axum REST api application
 ```
 
 ### References
+
 - Actix api [example](https://github.com/b-palaniappan/actix-api)
