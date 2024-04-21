@@ -17,7 +17,6 @@ use crate::db::entity::address;
 use crate::db::entity::prelude::Address;
 use crate::db::entity::users;
 use crate::db::entity::users::Entity as Users;
-
 use crate::service::location_service::get_geo_location;
 
 pub async fn add_user(
@@ -112,45 +111,45 @@ pub async fn get_user_by_key(
     State(db): State<DatabaseConnection>,
     key: String,
 ) -> Result<StoredUser, Box<dyn Error>> {
-    let users: Vec<(users::Model, Option<address::Model>)> = Users::find()
+    let user_with_address = Users::find()
         .find_also_related(Address)
         .filter(
             Condition::all()
                 .add(users::Column::Key.eq(key))
                 .add(users::Column::DeletedAt.is_null()),
         )
-        .all(&db)
+        .one(&db)
         .await?;
 
-    if let Some((user, address)) = users.get(0).cloned() {
-        let (a_line_one, a_line_two, a_city, a_state, a_country) = match address {
-            Some(a) => (a.line_one, a.line_two, a.city, a.state, a.country),
-            None => (
-                "".to_owned(),
-                None,
-                "".to_owned(),
-                "".to_owned(),
-                "".to_owned(),
-            ),
-        };
+    match user_with_address {
+        Some((user, address)) => {
+            let (a_line_one, a_line_two, a_city, a_state, a_country) = address.map_or(
+                (
+                    "".to_owned(),
+                    None,
+                    "".to_owned(),
+                    "".to_owned(),
+                    "".to_owned(),
+                ),
+                |a| (a.line_one, a.line_two, a.city, a.state, a.country),
+            );
 
-        // let Some(address) = user.1;
-        return Ok(StoredUser {
-            id: user.id as i64,
-            key: String::from_utf8_lossy(&user.key).to_string(),
-            first_name: user.first_name.unwrap_or_else(|| String::from("")),
-            last_name: user.last_name,
-            email: user.email,
-            address_line_one: a_line_one,
-            address_line_two: a_line_two,
-            city: a_city,
-            state: a_state,
-            country: a_country,
-        });
-    } else {
-        Err(Box::new(RecordNotFound(
+            Ok(StoredUser {
+                id: user.id as i64,
+                key: String::from_utf8_lossy(&user.key).to_string(),
+                first_name: user.first_name.unwrap_or_else(|| String::from("")),
+                last_name: user.last_name,
+                email: user.email,
+                address_line_one: a_line_one,
+                address_line_two: a_line_two,
+                city: a_city,
+                state: a_state,
+                country: a_country,
+            })
+        }
+        None => Err(Box::new(RecordNotFound(
             "User not found for the key".to_string(),
-        )))
+        ))),
     }
 }
 
@@ -162,33 +161,35 @@ pub async fn get_all_users(
         .find_also_related(Address)
         .all(&db)
         .await?;
-    let mut users_all_vec: Vec<StoredUser> = Vec::new();
+    let users_all_vec: Vec<StoredUser> = all_users
+        .into_iter()
+        .map(|(user, address)| {
+            let (a_line_one, a_line_two, a_city, a_state, a_country) = address.map_or(
+                (
+                    "".to_owned(),
+                    None,
+                    "".to_owned(),
+                    "".to_owned(),
+                    "".to_owned(),
+                ),
+                |a| (a.line_one, a.line_two, a.city, a.state, a.country),
+            );
 
-    for user in &all_users {
-        let (user, address) = user.clone();
-        let (a_line_one, a_line_two, a_city, a_state, a_country) = match address {
-            Some(a) => (a.line_one, a.line_two, a.city, a.state, a.country),
-            None => (
-                "".to_owned(),
-                None,
-                "".to_owned(),
-                "".to_owned(),
-                "".to_owned(),
-            ),
-        };
-        users_all_vec.push(StoredUser {
-            id: user.id as i64,
-            key: String::from_utf8_lossy(&user.key).to_string(),
-            first_name: user.first_name.unwrap_or_else(|| String::from("")),
-            last_name: user.last_name,
-            email: user.email,
-            address_line_one: a_line_one,
-            address_line_two: a_line_two,
-            city: a_city,
-            state: a_state,
-            country: a_country,
-        });
-    }
+            StoredUser {
+                id: user.id as i64,
+                key: String::from_utf8_lossy(&user.key).to_string(),
+                first_name: user.first_name.unwrap_or_else(|| String::from("")),
+                last_name: user.last_name,
+                email: user.email,
+                address_line_one: a_line_one,
+                address_line_two: a_line_two,
+                city: a_city,
+                state: a_state,
+                country: a_country,
+            }
+        })
+        .collect();
+
     Ok(users_all_vec)
 }
 
@@ -207,9 +208,8 @@ pub async fn delete_user_by_key(
         .await?;
 
     // Set Users and Address deleted at date to current date.
-    let now = Utc::now().naive_utc();
     let mut user_model: users::ActiveModel = user.unwrap().into();
-    user_model.deleted_at = Set(Some(now));
+    user_model.deleted_at = Set(Some(Utc::now().naive_utc()));
     user_model.update(&db).await?;
 
     Ok(())

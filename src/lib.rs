@@ -113,12 +113,8 @@ pub async fn run() {
     // run it
     let server_address: SocketAddr = server_addr.parse().unwrap();
     info!("Starting server at {}", server_addr);
-    if let Err(e) = axum::Server::bind(&server_address)
-        .serve(app.into_make_service())
-        .await
-    {
-        error!("Server error: {}", e);
-    }
+    let listener = tokio::net::TcpListener::bind(&server_address).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 // Page not found fallback handlers
