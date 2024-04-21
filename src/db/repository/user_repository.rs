@@ -1,6 +1,6 @@
 use axum::extract::State;
 use chrono::Utc;
-use sqlx::{query, query_as, Error, Executor, MySqlPool};
+use sqlx::{query, query_as, Error, MySqlPool};
 use tracing::{error, info};
 
 use crate::api::model::users::{CreateUser, PatchUser, UpdateUser};
@@ -29,12 +29,12 @@ pub async fn create_user(
 
     let user = query!("INSERT INTO users (first_name, last_name, email, created_at, updated_at) values (?, ?, ?, ?, ?)",
         &create_user.first_name, &create_user.last_name, &create_user.email, Utc::now(), Utc::now())
-        .execute(&pool)
+        .execute(&mut *txn)
         .await;
 
     let row = query!("INSERT INTO address (line_one, line_two, city, state, country, created_at, updated_at, user_id) values (?, ?, ?, ?, ?, ?, ?, ?)",
         &create_user.address_line_one, &create_user.address_line_tow, &create_user.city, &create_user.state, &create_user.country, Utc::now(), Utc::now(), user.unwrap().last_insert_id())
-        .execute(&pool)
+        .execute(&mut *txn)
         .await;
 
     txn.commit().await?;
