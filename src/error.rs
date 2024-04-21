@@ -20,6 +20,10 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "an internal server error occurred",
             ),
+            Self::UserNotFoundError => (
+                StatusCode::NOT_FOUND,
+                "user not found",
+            ),
         };
         (status, Json(json!({ "error": err_msg }))).into_response()
     }

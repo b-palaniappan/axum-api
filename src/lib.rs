@@ -1,10 +1,9 @@
 use crate::api::model::api_error::ApiErrorResponse;
 use axum::extract::State;
-use axum::headers::UserAgent;
 use axum::http::{HeaderMap, Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::{Json, Router, TypedHeader};
+use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
@@ -77,12 +76,8 @@ pub async fn run() {
     // run it
     let server_address: SocketAddr = server_addr.parse().unwrap();
     info!("Starting server at {}", server_addr);
-    if let Err(e) = axum::Server::bind(&server_address)
-        .serve(app.into_make_service())
-        .await
-    {
-        error!("Server error: {}", e);
-    }
+    let listener = tokio::net::TcpListener::bind(server_address).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 // Page not found fallback handlers
@@ -103,14 +98,8 @@ struct Message {
 }
 
 // TODO: Delete this after playing with JSON handlers
-async fn handler_json(
-    State(pool): State<MySqlPool>,
-    TypedHeader(user_agent): TypedHeader<UserAgent>,
-    headers: HeaderMap,
-) -> Response {
+async fn handler_json(State(pool): State<MySqlPool>, headers: HeaderMap) -> Response {
     info!("Handle Json payload");
-    // Get user agent header.
-    info!("User agent - {}", user_agent);
     // Get custom header from Request header.
     let header_value = headers.get("x-server-version").unwrap().to_str().unwrap();
     info!("Custom user header - {}", header_value);
