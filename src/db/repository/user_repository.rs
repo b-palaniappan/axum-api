@@ -1,19 +1,19 @@
 use axum::extract::State;
 use chrono::Utc;
-use sqlx::{query, query_as, Error, MySqlPool};
+use sqlx::{Error, PgPool, query, query_as};
 use tracing::{error, info};
 
 use crate::api::model::users::{CreateUser, PatchUser, UpdateUser};
 use crate::db::entity::user_entity::User;
 
-pub async fn get_all_user(State(pool): State<MySqlPool>) -> Result<Vec<User>, Error> {
+pub async fn get_all_user(State(pool): State<PgPool>) -> Result<Vec<User>, Error> {
     let users = query_as::<_, User>("SELECT * FROM users WHERE deleted_at is null")
         .fetch_all(&pool)
         .await;
     return users;
 }
 
-pub async fn get_user_by_id(State(pool): State<MySqlPool>, id: i64) -> Result<Option<User>, Error> {
+pub async fn get_user_by_id(State(pool): State<PgPool>, id: i64) -> Result<Option<User>, Error> {
     let user = query_as::<_, User>("SELECT * FROM users WHERE id = ? AND deleted_at is null")
         .bind(id)
         .fetch_optional(&pool)
@@ -22,7 +22,7 @@ pub async fn get_user_by_id(State(pool): State<MySqlPool>, id: i64) -> Result<Op
 }
 
 pub async fn create_user(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     create_user: &CreateUser,
 ) -> Result<Option<User>, Error> {
     let mut txn = pool.begin().await?;
@@ -57,7 +57,7 @@ pub async fn create_user(
 }
 
 pub async fn update_user(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     id: i64,
     update_user: &UpdateUser,
 ) -> Result<Option<User>, Error> {
@@ -73,7 +73,7 @@ pub async fn update_user(
     return row;
 }
 
-pub async fn delete_user(State(pool): State<MySqlPool>, id: i64) -> bool {
+pub async fn delete_user(State(pool): State<PgPool>, id: i64) -> bool {
     let row = query("UPDATE users SET deleted_at=?1 WHERE id=?2")
         .bind(Utc::now())
         .bind(id)
@@ -86,7 +86,7 @@ pub async fn delete_user(State(pool): State<MySqlPool>, id: i64) -> bool {
     };
 }
 
-pub async fn patch_user(State(pool): State<MySqlPool>, id: i64, patch_user: &PatchUser) {
+pub async fn patch_user(State(pool): State<PgPool>, id: i64, patch_user: &PatchUser) {
     // todo: work in progress!!!
     todo!()
 }

@@ -1,8 +1,8 @@
+use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{Json, Router};
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 use tracing::{error, info};
 use validator::Validate;
 
@@ -12,7 +12,7 @@ use crate::service::user_service;
 
 // Create user
 async fn create_user(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     Json(user): Json<CreateUser>,
 ) -> impl IntoResponse {
     info!("Create a new User");
@@ -66,14 +66,14 @@ async fn create_user(
 
 // Get user
 // TODO: Need to be implemented
-async fn get_user(State(pool): State<MySqlPool>, Path(id): Path<String>) -> impl IntoResponse {
+async fn get_user(State(pool): State<PgPool>, Path(id): Path<String>) -> impl IntoResponse {
     info!("Get user by id - {}", id);
     Json("Get user by id")
 }
 
 // Update user
 async fn update_user(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     Path(id): Path<String>,
     Json(user): Json<UpdateUser>,
 ) -> impl IntoResponse {
@@ -85,13 +85,13 @@ async fn update_user(
 // TODO: Need to be implemented
 
 // Delete user
-async fn delete_user(State(pool): State<MySqlPool>, Path(id): Path<String>) -> impl IntoResponse {
+async fn delete_user(State(pool): State<PgPool>, Path(id): Path<String>) -> impl IntoResponse {
     info!("Delete user by id - {}", id);
     Json("Delete user by id")
 }
 
 // Router function for hello handler
-pub fn routes() -> Router<MySqlPool> {
+pub fn routes() -> Router<PgPool> {
     Router::new()
         .route("/", post(create_user))
         .route("/:id", get(get_user).put(update_user))

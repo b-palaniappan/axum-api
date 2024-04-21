@@ -1,12 +1,13 @@
-use crate::db::entity::event_entity::Event;
 use axum::extract::State;
 use chrono::Utc;
-use sqlx::{query, MySqlPool};
+use sqlx::{PgPool, query};
 use tracing::{error, info};
+
+use crate::db::entity::event_entity::Event;
 
 // Create a new event.
 pub async fn create_event(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     event: &Event,
     info: String,
     user_id: i64,

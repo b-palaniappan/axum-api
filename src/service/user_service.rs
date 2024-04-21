@@ -1,12 +1,12 @@
 use axum::extract::State;
-use sqlx::{Error, MySqlPool};
+use sqlx::{Error, PgPool};
 
 use crate::api::model::users::{CreateUser, UpdateUser};
 use crate::db::entity::user_entity::User;
 use crate::db::repository::user_repository;
 
 pub async fn create_user(
-    State(pool): State<MySqlPool>,
+    State(pool): State<PgPool>,
     create_user: &CreateUser,
 ) -> Result<Option<User>, Error> {
     let response = user_repository::create_user(State(pool), create_user).await;
@@ -17,7 +17,7 @@ pub async fn create_user(
     };
 }
 
-pub async fn update_user(State(pool): State<MySqlPool>, id: i64, update_user: &UpdateUser) -> bool {
+pub async fn update_user(State(pool): State<PgPool>, id: i64, update_user: &UpdateUser) -> bool {
     let response = user_repository::update_user(State(pool), id, update_user).await;
     return match response {
         Ok(Some(_)) => true,
