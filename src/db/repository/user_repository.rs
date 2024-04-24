@@ -1,6 +1,6 @@
 use axum::extract::State;
 use chrono::Utc;
-use sqlx::{Error, PgPool, query, query_as};
+use sqlx::{Error, PgPool, query, query_as, Row};
 use tracing::{error, info};
 
 use crate::api::model::users::{CreateUser, PatchUser, UpdateUser};
@@ -27,33 +27,41 @@ pub async fn create_user(
 ) -> Result<Option<User>, Error> {
     let mut txn = pool.begin().await?;
 
-    let user = query!("INSERT INTO users (first_name, last_name, email, created_at, updated_at) values (?, ?, ?, ?, ?)",
-        &create_user.first_name, &create_user.last_name, &create_user.email, Utc::now(), Utc::now())
-        .execute(&mut *txn)
+    let user = query!("INSERT INTO \"user\" (first_name, last_name, email) values ($1, $2, $3)",
+        &create_user.first_name, &create_user.last_name, &create_user.email)
+        .fetch_one(&mut *txn)
         .await;
 
-    let row = query!("INSERT INTO address (line_one, line_two, city, state, country, created_at, updated_at, user_id) values (?, ?, ?, ?, ?, ?, ?, ?)",
-        &create_user.address_line_one, &create_user.address_line_tow, &create_user.city, &create_user.state, &create_user.country, Utc::now(), Utc::now(), user.unwrap().last_insert_id())
+    let user_id = &user.unwrap().get("id");
+    let address_line_two = create_user.address_line_two.as_deref().unwrap_or("");
+    let row = query!("INSERT INTO address (line_one, line_two, city, state, zip, country, user_id) values ($1, $2, $3, $4, $5, $6, $7)",
+        &create_user.address_line_one, address_line_two, &create_user.city, &create_user.state, &create_user.zipcode, &create_user.country, user_id)
         .execute(&mut *txn)
         .await;
 
     txn.commit().await?;
 
-    return match row {
-        Ok(u) => {
-            info!("Inserted Row successfully - {:?}", u);
-            let added_user = get_user_by_id(State(pool), u.last_insert_id() as i64).await;
-            match added_user {
-                Ok(Some(u)) => return Ok(Some(u)),
-                Ok(None) => return Ok(None),
-                Err(e) => Err(e),
-            }
-        }
-        Err(e) => {
-            error!("Error {}", e);
-            Err(e)
-        }
-    };
+    // return match &user {
+    //     Ok(u) => {
+    //         info!("Inserted Row successfully. User id {:?}", user_id);
+    //         let added_user = get_user_by_id(State(pool), *user_id).await;
+    //         match added_user {
+    //             Ok(Some(u)) => return Ok(Some(u)),
+    //             Ok(None) => return Ok(None),
+    //             Err(e) => Err(e),
+    //         }
+    //     }
+    //     Err(e) => {
+    //         Err(e)
+    //     }
+    // };
+    info!("Inserted Row successfully. User id {:?}", user_id);
+    let added_user = get_user_by_id(State(pool), *user_id).await;
+    match added_user {
+        Ok(Some(u)) => Ok(Some(u)),
+        Ok(None) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 pub async fn update_user(

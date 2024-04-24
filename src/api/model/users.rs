@@ -13,10 +13,11 @@ pub struct CreateUser {
     #[serde(rename = "addressLineOne")]
     pub address_line_one: String,
     #[serde(rename = "addressLineTwo")]
-    pub address_line_tow: Option<String>,
+    pub address_line_two: Option<String>,
     pub city: String,
     #[validate(length(equal = 2))]
     pub state: String,
+    pub zipcode: String,
     pub country: String,
 }
 
