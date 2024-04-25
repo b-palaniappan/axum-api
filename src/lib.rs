@@ -1,16 +1,16 @@
 use std::env;
 use std::net::SocketAddr;
 
-use axum::{Json, Router};
 use axum::extract::State;
 use axum::http::{HeaderMap, Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
+use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
-use sqlx::{Error, PgPool};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::{Error, PgPool};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
 
@@ -107,7 +107,7 @@ async fn handler_json(State(pool): State<PgPool>, headers: HeaderMap) -> Respons
     info!("Custom user header - {}", header_value);
 
     // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
-    let response: Result<(String, ), Error> =
+    let response: Result<(String,), Error> =
         sqlx::query_as("SELECT 'Hello'").fetch_one(&pool).await;
     match response {
         Ok(r) => info!("DB Response -> {}", r.0),

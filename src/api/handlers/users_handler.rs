@@ -1,7 +1,7 @@
-use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
+use axum::{Json, Router};
 use sqlx::PgPool;
 use tracing::{error, info};
 use validator::Validate;
