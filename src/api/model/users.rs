@@ -61,7 +61,7 @@ pub struct PatchUser {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoredUser {
-    pub id: i64,
+    pub id: String,
     #[serde(rename = "firstName")]
     pub first_name: String,
     #[serde(rename = "lastName")]

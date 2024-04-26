@@ -8,7 +8,7 @@ pub struct Event {
     pub event_type: EventType,
     pub event_name: EventName,
     pub event_time: DateTime<Utc>,
-    pub user_id: i64,
+    pub user_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

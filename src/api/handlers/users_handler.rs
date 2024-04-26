@@ -2,6 +2,7 @@ use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use chrono::Utc;
 use sqlx::PgPool;
 use tracing::{error, info};
 use validator::Validate;
@@ -33,18 +34,18 @@ async fn create_user(
                     country: "".to_string(),
                 })),
                 Ok(None) => Err(Json(ApiErrorResponse {
-                    status: 0,
-                    time: "".to_string(),
-                    message: "".to_string(),
+                    status: 404,
+                    time: Utc::now().to_string(),
+                    message: "User not found".to_string(),
                     debug_message: None,
                     sub_errors: vec![],
                 })),
                 Err(err) => {
                     error!("Error - {}", err);
                     Err(Json(ApiErrorResponse {
-                        status: 0,
-                        time: "".to_string(),
-                        message: "".to_string(),
+                        status: 500,
+                        time: Utc::now().to_string(),
+                        message: "Internal server error".to_string(),
                         debug_message: None,
                         sub_errors: vec![],
                     }))
@@ -54,9 +55,9 @@ async fn create_user(
         Err(err) => {
             error!("Error - {}", err);
             Err(Json(ApiErrorResponse {
-                status: 0,
-                time: "".to_string(),
-                message: "".to_string(),
+                status: 500,
+                time: Utc::now().to_string(),
+                message: "Internal server error".to_string(),
                 debug_message: None,
                 sub_errors: vec![],
             }))
@@ -68,7 +69,40 @@ async fn create_user(
 // TODO: Need to be implemented
 async fn get_user(State(pool): State<PgPool>, Path(id): Path<String>) -> impl IntoResponse {
     info!("Get user by id - {}", id);
-    Json("Get user by id")
+    let response = user_service::get_user_by_id(State(pool), id).await;
+    return match response {
+        Ok(Some(u)) => Ok(Json(StoredUser {
+            id: u.id,
+            first_name: u.first_name,
+            last_name: u.last_name,
+            email: u.email,
+            address_line_one: "".to_string(),
+            address_line_tow: None,
+            city: "".to_string(),
+            state: "".to_string(),
+            country: "".to_string(),
+        })),
+        Err(err) => {
+            error!("Error - {}", err);
+            Err(Json(ApiErrorResponse {
+                status: 500,
+                time: Utc::now().to_string(),
+                message: "Internal server error".to_string(),
+                debug_message: None,
+                sub_errors: vec![],
+            }))
+        }
+        _ => {
+            error!("Error - User not found");
+            Err(Json(ApiErrorResponse {
+                status: 404,
+                time: Utc::now().to_string(),
+                message: "User not found".to_string(),
+                debug_message: None,
+                sub_errors: vec![],
+            }))
+        }
+    };
 }
 
 // Update user
@@ -78,7 +112,7 @@ async fn update_user(
     Json(user): Json<UpdateUser>,
 ) -> impl IntoResponse {
     info!("Update existing User with id - {}", id);
-    Json("Update user")
+    user_service::update_user(State(pool), id, &user).await;
 }
 
 // Patch user
@@ -87,12 +121,12 @@ async fn update_user(
 // Delete user
 async fn delete_user(State(pool): State<PgPool>, Path(id): Path<String>) -> impl IntoResponse {
     info!("Delete user by id - {}", id);
-    Json("Delete user by id")
+    user_service::delete_user(State(pool), id).await;
 }
 
 // Router function for hello handler
 pub fn routes() -> Router<PgPool> {
     Router::new()
         .route("/", post(create_user))
-        .route("/:id", get(get_user).put(update_user))
+        .route("/:id", get(get_user).put(update_user).delete(delete_user))
 }
