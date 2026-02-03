@@ -2,14 +2,16 @@ use axum::extract::State;
 use chrono::Utc;
 use nid::alphabet::Base64UrlAlphabet;
 use nid::Nanoid;
-use sqlx::{query, query_as, Error, PgPool, Row};
+use sqlx::{Error, PgPool, query, query_as, Row};
 use tracing::info;
 
 use crate::api::model::users::{CreateUser, PatchUser, UpdateUser};
 use crate::db::entity::user_entity::User;
 
-pub async fn get_all_user(State(pool): State<PgPool>) -> Result<Vec<User>, Error> {
-    let users = query_as::<_, User>("SELECT * FROM \"user\" WHERE deleted_at is null")
+pub async fn get_all_user(State(pool): State<PgPool>, page: i64, limit: i64) -> Result<Vec<User>, Error> {
+    let users = query_as::<_, User>("SELECT * FROM \"user\" WHERE deleted_at is null ORDER BY created_at DESC LIMIT $1 OFFSET $2")
+        .bind(limit)
+        .bind((page - 1) * limit)
         .fetch_all(&pool)
         .await;
     return users;
@@ -59,25 +61,19 @@ pub async fn create_user(
     }
 }
 
-pub async fn update_user(
-    State(pool): State<PgPool>,
-    id: String,
-    update_user: &UpdateUser,
-) -> Result<Option<User>, Error> {
-    let row = query_as::<_, User>("UPDATE \"user\" SET first_name=?1, last_name=?2, email=?3, updated_at=?4 WHERE id=?4 and deleted_at is null")
-        .bind(&update_user.first_name)
-        .bind(&update_user.last_name)
-        .bind(&update_user.email)
-        .bind(Utc::now())
-        .bind(id)
-        .fetch_optional(&pool)
+pub async fn update_user(State(pool): State<PgPool>, id: String, update_user: &UpdateUser) -> bool {
+    let update_user = query!("UPDATE \"user\" SET first_name=$1, last_name=$2, email=$3, updated_at=$4 WHERE id=$5 and deleted_at is null", 
+        &update_user.first_name, &update_user.last_name, &update_user.email, Utc::now(), id)
+        .execute(&pool)
         .await;
-
-    return row;
+    match update_user {
+        Ok(_) => true,
+        Err(e) => false,
+    }
 }
 
 pub async fn delete_user(State(pool): State<PgPool>, id: String) -> bool {
-    let row = query("UPDATE \"user\" SET deleted_at=?1 WHERE id=?2")
+    let row = query("UPDATE \"user\" SET deleted_at=$1 WHERE id=$2")
         .bind(Utc::now())
         .bind(id)
         .fetch_optional(&pool)
