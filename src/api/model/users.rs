@@ -1,3 +1,4 @@
+use crate::db::entity::user_entity::User;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -13,10 +14,11 @@ pub struct CreateUser {
     #[serde(rename = "addressLineOne")]
     pub address_line_one: String,
     #[serde(rename = "addressLineTwo")]
-    pub address_line_tow: Option<String>,
+    pub address_line_two: Option<String>,
     pub city: String,
     #[validate(length(equal = 2))]
     pub state: String,
+    pub zipcode: String,
     pub country: String,
 }
 
@@ -36,6 +38,7 @@ pub struct UpdateUser {
     pub city: String,
     #[validate(length(equal = 2))]
     pub state: String,
+    pub zipcode: String,
     pub country: String,
 }
 
@@ -60,7 +63,7 @@ pub struct PatchUser {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoredUser {
-    pub id: i64,
+    pub id: String,
     #[serde(rename = "firstName")]
     pub first_name: String,
     #[serde(rename = "lastName")]
@@ -73,4 +76,25 @@ pub struct StoredUser {
     pub city: String,
     pub state: String,
     pub country: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Users {
+    pub users: Vec<StoredUser>,
+}
+
+impl From<User> for StoredUser {
+    fn from(user: User) -> Self {
+        StoredUser {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email,
+            address_line_one: "".to_string(),
+            address_line_tow: None,
+            city: "".to_string(),
+            state: "".to_string(),
+            country: "".to_string(),
+        }
+    }
 }

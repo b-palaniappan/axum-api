@@ -3,8 +3,8 @@ use sqlx::FromRow;
 
 #[derive(Debug, FromRow)]
 pub struct Address {
-    pub id: i64,
-    pub user_id: i64,
+    pub id: String,
+    pub user_id: String,
     pub line_one: String,
     pub line_two: String,
     pub city: String,

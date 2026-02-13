@@ -1,19 +1,20 @@
-use crate::api::model::api_error::ApiErrorResponse;
+use std::env;
+use std::net::SocketAddr;
+
 use axum::extract::State;
-use axum::headers::UserAgent;
 use axum::http::{HeaderMap, Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::{Json, Router, TypedHeader};
+use axum::{Json, Router};
 use chrono::{SecondsFormat, Utc};
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
-use sqlx::mysql::MySqlPoolOptions;
-use sqlx::{Error, MySqlPool};
-use std::env;
-use std::net::SocketAddr;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Error, PgPool};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
+
+use crate::api::model::api_error::ApiErrorResponse;
 
 pub mod api {
     pub mod handlers;
@@ -42,7 +43,7 @@ pub async fn run() {
     let server_addr = server_host + ":" + &*server_port;
 
     // Setup connection pool.
-    let pool = MySqlPoolOptions::new()
+    let pool = PgPoolOptions::new()
         .max_connections(10)
         .min_connections(1)
         .connect(&db_connection_str)
@@ -77,12 +78,8 @@ pub async fn run() {
     // run it
     let server_address: SocketAddr = server_addr.parse().unwrap();
     info!("Starting server at {}", server_addr);
-    if let Err(e) = axum::Server::bind(&server_address)
-        .serve(app.into_make_service())
-        .await
-    {
-        error!("Server error: {}", e);
-    }
+    let listener = tokio::net::TcpListener::bind(server_address).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 // Page not found fallback handlers
@@ -103,14 +100,8 @@ struct Message {
 }
 
 // TODO: Delete this after playing with JSON handlers
-async fn handler_json(
-    State(pool): State<MySqlPool>,
-    TypedHeader(user_agent): TypedHeader<UserAgent>,
-    headers: HeaderMap,
-) -> Response {
+async fn handler_json(State(pool): State<PgPool>, headers: HeaderMap) -> Response {
     info!("Handle Json payload");
-    // Get user agent header.
-    info!("User agent - {}", user_agent);
     // Get custom header from Request header.
     let header_value = headers.get("x-server-version").unwrap().to_str().unwrap();
     info!("Custom user header - {}", header_value);
