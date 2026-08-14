@@ -1,3 +1,5 @@
+
+
 # axum API application
 Rust Axum REST api application
 
@@ -10,7 +12,7 @@ Rust Axum REST api application
 - [ ] Add roll based JWT.
 - [ ] Global and local api error handling.
 - [ ] Pagination and Sorting of list for filter.
-- [ ] CORS support for API.
+- [x] CORS support for API.
 - [ ] Custom validation error response.
 
 #### Global Error Handing Response payload
